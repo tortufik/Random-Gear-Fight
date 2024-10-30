@@ -35,6 +35,29 @@ end
 
 function api:GetClassesTable()
 	return classes
+	-- classes format
+	--[[
+	{
+		 ["Misc"] = {ID},
+		 ["Award"] = {ID}, -- child of misc class
+		 ["Celebration"] = {ID}, -- child of misc class
+		 ["Other"] = {ID}, -- child of misc class
+		 ["Toy"] = {ID}, -- child of misc class
+		 ["Music"] = {ID}, -- child of misc class
+		 ["Support"] = {ID},
+		 ["Defense"] = {ID}, -- child of support class
+		 ["Healing"] = {ID}, -- child of support class
+		 ["Movement"] = {ID}, -- child of support class
+		 ["Summoning"] = {ID}, -- child of support class
+		 ["Potion"] = {ID}, -- child of support class
+		 ["Weapon"] = {ID},
+		 ["Melee"] = {ID}, -- child of weapon class
+		 ["Magic"] = {ID}, -- child of weapon class
+		 ["Explosion"] = {ID}, -- child of weapon class
+		 ["Ranged"] = {ID} -- child of weapon class
+	}
+	child of x class means that the ids inside of this class will also be in its parent
+	]]
 end
 
 function api:AwardPoints(Player, Points)
