@@ -25,12 +25,18 @@ elseif RunService:IsClient() then
 	api.OnHitInternal = ReplicatedStorage.ClientAPI.OnHit -- do not use
 end
 
+api.ClassesTable = classes
+api.GearTable = require(ReplicatedStorage.Modules.GearTable)
 api.PointsTexture = "rbxassetid://18923539895"
 
 for _,v in pairs(geartable) do
 	if v:IsA("ModuleScript") then
 		classes[v.Name] = require(v)
 	end
+end
+
+function api:GetGearTable()
+	return geartable
 end
 
 function api:GetClassesTable()
@@ -136,12 +142,7 @@ function api:GetProjectileOwner(obj)
 	return Owner
 end
 
-function api:TakeDamage(ignore, humanoid : Humanoid, deal : number, Parent : Instance, setdamage : boolean)
-	if typeof(ignore) ~= "table" then
-		Parent = deal
-		deal = humanoid
-		humanoid = ignore
-	end
+function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, setdamage : boolean)
 	local gear = api:IsGear(Parent) :: Tool
 	local proj = api:IsProjectile(Parent) :: BasePart
 	local Hitter
@@ -159,12 +160,26 @@ function api:TakeDamage(ignore, humanoid : Humanoid, deal : number, Parent : Ins
 	if RunService:IsServer() then
 		api.OnHitInternal:Fire(humanoid, deal, Parent)
 	else
-		ReplicatedStorage:WaitForChild("SetClientHealth"):FireServer(-1, Players.LocalPlayer.Character, deal, Parent) -- masive security flaw lol
+		ReplicatedStorage:WaitForChild("SetClientHealth"):FireServer(-1, Players.LocalPlayer.Character, deal, Parent)
 		api.OnHitInternal:FireServer(humanoid, deal, Parent)
 	end
 	
 	if Hit and Hitter and Hitter ~= Hit and RunService:IsServer() then
 		api:SetKiller(Hit, Hitter)
+		--if gear then
+		--	local plr = Hitter
+
+		--	if plr then
+		--		ReplicatedStorage.MakeSysMessage:FireAllClients({Text = "Player "..humanoid.Parent.Name.." got hit by "..plr.Name, Color = Color3.new(1, 0.298039, 0.615686)})
+		--	end
+		--elseif proj then
+		--	local owner = api:GetProjectileOwner(proj)
+		--	if owner then
+		--		ReplicatedStorage.MakeSysMessage:FireAllClients({Text = "Player "..humanoid.Parent.Name.." got hit by projectile "..proj.Name.." Owner: "..owner.Name, Color = Color3.new(1, 0.298039, 0.615686)})
+		--	else
+		--		ReplicatedStorage.MakeSysMessage:FireAllClients({Text = "Player "..humanoid.Parent.Name.." got hit by projectile "..proj.Name.." Owner: nil", Color = Color3.new(1, 0.298039, 0.615686)})
+		--	end
+		--end
 	end
 end
 
