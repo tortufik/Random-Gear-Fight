@@ -1,3 +1,4 @@
+--local script
 --Made by Luckymaxer
 
 Mouse_Icon = "rbxasset://textures/GunCursor.png"
