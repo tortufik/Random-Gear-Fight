@@ -33,5 +33,3 @@
 ```lua
 local api = require(game.ReplicatedStorage.Modules.GearApi)
 ```
-
----
