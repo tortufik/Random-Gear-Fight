@@ -10,7 +10,7 @@
 
 3 - Do not parent any of the objects in the content to any of the services except for the workspace
 
-4 - Do not use any malicious code or require a module using an id unless its made by roblox (im not taking any chances)
+4 - Do not use any malicious code or require a module using an id unless its made by roblox (if you will break this rule you will be banned from making any content for rgf)
 
 5 - No copyrighted stuff
 
