@@ -36,7 +36,7 @@ for _,v in pairs(geartable) do
 end
 
 function api:GetGearTable()
-	return geartable
+	return api.GearTable
 end
 
 function api:GetClassesTable()
