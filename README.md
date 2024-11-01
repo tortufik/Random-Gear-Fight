@@ -26,6 +26,7 @@
 1 - Follow the general guidelines
 2 - The gear should be well balanced (aka not anything better than scroll of sevenless or any of the periastrons)
 3 - All of the objects used should stay in the gear
+4 - The gear must contain the MouseIcon script
 
 ---
 
