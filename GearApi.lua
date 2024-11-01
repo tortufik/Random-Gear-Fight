@@ -1,3 +1,4 @@
+-- module script
 -- game.ReplicatedStorage.Modules.GearApi
 
 local Players = game:GetService("Players")
