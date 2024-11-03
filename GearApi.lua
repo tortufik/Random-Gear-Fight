@@ -230,6 +230,8 @@ function api:GetIdFromGearModel(Gear)
 			return Gear:FindFirstChild("Id").Value
 		elseif Gear:FindFirstChild("ID") and Gear:FindFirstChild("ID"):IsA("NumberValue") then
 			return Gear:FindFirstChild("ID").Value
+		else
+			return Gear.Name
 		end
 	end
 	
@@ -237,12 +239,17 @@ function api:GetIdFromGearModel(Gear)
 end
 
 function api:GetFixedGearFromId(Id)
-	assert(typeof(Id) == "number", "Argument 1 expected to be number got "..typeof(Id))
 	assert(RunService:IsServer(), "GetFixedGearFromId can only be accessed on server")
 	
 	ServerStorage:WaitForChild("Fixed")
 	
 	for _,v in pairs(ServerStorage.Fixed:GetChildren()) do
+		if api:GetIdFromGearModel(v) == Id then
+			return v:Clone()
+		end
+	end
+	
+	for _,v in pairs(ServerStorage.Gears:GetChildren()) do
 		if api:GetIdFromGearModel(v) == Id then
 			return v:Clone()
 		end
