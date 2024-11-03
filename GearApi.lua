@@ -183,8 +183,14 @@ function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, s
 			humanoid:TakeDamage(deal)
 		end
 	else
-		if not humanoid.Parent:FindFirstChildWhichIsA("ForceField") then
-			humanoid.Health = deal
+		if Hit then
+			if not humanoid.Parent:FindFirstChildWhichIsA("ForceField") then
+				humanoid.Health = deal / api:GetDamageMultiplier(Hit)
+			end
+		else
+			if not humanoid.Parent:FindFirstChildWhichIsA("ForceField") then
+				humanoid.Health = deal
+			end
 		end
 	end
 	if RunService:IsServer() then
