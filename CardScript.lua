@@ -24,11 +24,6 @@ if ServerStorage.MapAttributes:FindFirstChild("NoMovement") then
 	end
 end
 
-local function IsSkateboard(Tool)
-	if not Tool:FindFirstChild("Handle") then return false end
-	return (Tool:FindFirstChild("Script") and Tool:FindFirstChild("Handle"):FindFirstChild("Drop") and Tool:FindFirstChild("Handle"):FindFirstChild("Mesh") and Tool:FindFirstChild("Handle"):FindFirstChild("RightGripAttachment") and Tool:FindFirstChild("RemoteControl"):FindFirstChild("ClientControl") and Tool:FindFirstChild("RemoteControl"):FindFirstChild("ServerControl")) or string.find(Tool.Name, "Skate") or string.find(Tool.Name, "skate")
-end
-
 function onActivated()
 	if disable == false then
 		disable = true
