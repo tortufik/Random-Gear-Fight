@@ -1,9 +1,6 @@
-local InsertService = game:GetService("InsertService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
-local MarketplaceService = game:GetService("MarketplaceService")
-local DataStoreService = game:GetService("DataStoreService")
 
 local Tool = script.Parent
 disable = false
@@ -41,29 +38,12 @@ function onActivated()
 
 		local whichNum = math.random(1,#gears)
 		
-		if typeof(gears[whichNum]) == "number" then
-			ReplicatedStorage.SaveGear:Fire(plr, gears[whichNum])
-			print(plr.Name.." Picked: "..gears[whichNum])
-			
-			local root = GearAPI:GetFixedGearFromId(gears[whichNum])
-			
-			Tool:Destroy()
-			if root then
-				root.Parent = plr.Backpack
-				local num = Instance.new("NumberValue", root)
-				num.Value = gears[whichNum]
-				num.Name = "ID"
+		ReplicatedStorage.SaveGear:Fire(plr, gears[whichNum])
+		local root = ServerStorage.Gears:FindFirstChild(gears[whichNum]):Clone()
+		ReplicatedStorage.MakeSysMessage:FireAllClients({Text = plr.Name.." got "..gears[whichNum], TextSize = 12, Font = Enum.Font.Ubuntu})
 
-				ReplicatedStorage.MakeSysMessage:FireAllClients({Text = plr.Name.." got "..MarketplaceService:GetProductInfo(gears[whichNum]).Name.." "..gears[whichNum], TextSize = 12, Font = Enum.Font.Ubuntu})
-			end
-		elseif typeof(gears[whichNum]) == "string" then
-			local root = ServerStorage.Gears:FindFirstChild(gears[whichNum]):Clone()
-
-			ReplicatedStorage.MakeSysMessage:FireAllClients({Text = plr.Name.." got "..gears[whichNum], TextSize = 12, Font = Enum.Font.Ubuntu})
-			
-			Tool:Destroy()
-			root.Parent = plr.Backpack
-		end
+		Tool:Destroy()
+		root.Parent = plr.Backpack
 	end
 end
 
