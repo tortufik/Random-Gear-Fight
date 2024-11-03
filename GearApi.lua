@@ -145,7 +145,28 @@ function api:GetProjectileOwner(obj)
 	return Owner
 end
 
+function api:GetDamageMultiplier(Player)
+	assert(typeof(Player) == "Instance", "Argument 1 expected to be instance got "..typeof(Player))
+	
+	if not Player:GetAttribute("DamageMultiplier") then
+		Player:SetAttribute("DamageMultiplier", 1)
+	end
+	
+	return Player:GetAttribute("DamageMultiplier")
+end
+
+function api:SetDamageMultiplier(Player, Multiplier)
+	assert(typeof(Player) == "Instance", "Argument 1 expected to be instance got "..typeof(Player))
+	assert(typeof(Multiplier) == "number", "Argument 2 expected to be number got "..typeof(Multiplier))
+	
+	Player:SetAttribute("DamageMultiplier", Multiplier)
+end
+
 function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, setdamage : boolean) -- used for hit detection use this instead of humanoid:TakeDamage()
+	assert(typeof(humanoid) == "Instance",  "Argument 1 expected to be instance got "..typeof(humanoid))
+	assert(typeof(deal) == "number", "Argument 2 expected to be number got "..typeof(deal))
+	assert(typeof(Parent) == "Instance", "Argument 3 expected to be instance got "..typeof(Parent))
+	
 	local gear = api:IsGear(Parent) :: Tool
 	local proj = api:IsProjectile(Parent) :: BasePart
 	local Hitter
@@ -156,33 +177,25 @@ function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, s
 	end
 	local Hit = Players:GetPlayerFromCharacter(humanoid.Parent)
 	if not setdamage then
-		humanoid:TakeDamage(deal)
+		if Hit then
+			humanoid:TakeDamage(deal * api:GetDamageMultiplier(Hit))
+		else
+			humanoid:TakeDamage(deal)
+		end
 	else
-		humanoid.Health = deal
+		if not humanoid.Parent:FindFirstChildWhichIsA("ForceField") then
+			humanoid.Health = deal
+		end
 	end
 	if RunService:IsServer() then
 		api.OnHitInternal:Fire(humanoid, deal, Parent)
 	else
-		ReplicatedStorage:WaitForChild("SetClientHealth"):FireServer(-1, Players.LocalPlayer.Character, deal, Parent)
+		ReplicatedStorage:WaitForChild("SetClientHealth"):FireServer(-1, Players.LocalPlayer.Character, humanoid.Health - deal, Parent)
 		api.OnHitInternal:FireServer(humanoid, deal, Parent)
 	end
 	
 	if Hit and Hitter and Hitter ~= Hit and RunService:IsServer() then
 		api:SetKiller(Hit, Hitter)
-		--if gear then
-		--	local plr = Hitter
-
-		--	if plr then
-		--		ReplicatedStorage.MakeSysMessage:FireAllClients({Text = "Player "..humanoid.Parent.Name.." got hit by "..plr.Name, Color = Color3.new(1, 0.298039, 0.615686)})
-		--	end
-		--elseif proj then
-		--	local owner = api:GetProjectileOwner(proj)
-		--	if owner then
-		--		ReplicatedStorage.MakeSysMessage:FireAllClients({Text = "Player "..humanoid.Parent.Name.." got hit by projectile "..proj.Name.." Owner: "..owner.Name, Color = Color3.new(1, 0.298039, 0.615686)})
-		--	else
-		--		ReplicatedStorage.MakeSysMessage:FireAllClients({Text = "Player "..humanoid.Parent.Name.." got hit by projectile "..proj.Name.." Owner: nil", Color = Color3.new(1, 0.298039, 0.615686)})
-		--	end
-		--end
 	end
 end
 
