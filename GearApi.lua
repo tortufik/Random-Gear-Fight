@@ -78,7 +78,7 @@ function api:AwardPoints(Player, Points)
 	ReplicatedStorage.MakeSysNotification:FireClient(Player, {Title = "Points", Text = "You got awarded "..Points.." Points", Icon = api.PointsTexture})
 end
 
-function api:SetKiller(Player1 : Player, Player2 : Player)
+function api:SetKiller(Player1 : Player, Player2 : Player) -- overwrite hit detection (probably dont use this)
 	assert(RunService:IsServer(), "SetKiller can only be accessed on server")
 	
 	Player1.Killer.Value = Player2
@@ -145,7 +145,7 @@ function api:GetProjectileOwner(obj)
 	return Owner
 end
 
-function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, setdamage : boolean)
+function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, setdamage : boolean) -- used for hit detection use this instead of humanoid:TakeDamage()
 	local gear = api:IsGear(Parent) :: Tool
 	local proj = api:IsProjectile(Parent) :: BasePart
 	local Hitter
