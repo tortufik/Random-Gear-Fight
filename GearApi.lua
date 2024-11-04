@@ -258,4 +258,8 @@ function api:GetFixedGearFromId(Id)
 	return nil
 end
 
+function api:IsSandbox()
+	return game.PlaceId ~= 78594287058078
+end
+
 return api
