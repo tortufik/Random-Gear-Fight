@@ -30,7 +30,7 @@ end
 
 api.ClassesTable = classes
 api.GearTable = require(ReplicatedStorage.Modules.GearTable)
-api.PointsTexture = "rbxassetid://18923539895"
+api.PointsTexture = "rbxassetid://206410433"
 
 for _,v in pairs(geartable) do
 	if v:IsA("ModuleScript") then
