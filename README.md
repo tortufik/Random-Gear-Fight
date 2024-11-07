@@ -40,6 +40,12 @@
 
 ---
 
+## Note about IDs
+
+IDs of the original gears are numbers and the IDs of the custom gears are strings
+
+---
+
 ## How to get the api:
 
 ```lua
