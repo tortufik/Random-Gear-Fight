@@ -206,7 +206,9 @@ function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, s
 end
 
 function api:GetNameFromId(Id)
-	assert(typeof(Id) == "number", "Argument 1 expected to be number got "..typeof(Id))
+	if typeof(Id) == "string" then
+		return Id
+	end
 	if RunService:IsClient() then
 		for i,v in pairs(NameToId) do
 			if v == Id then
@@ -236,6 +238,7 @@ function api:GetIdFromName(Name)
 			end
 		end
 	end
+	return Name
 end
 
 function api:GetIdFromGearModel(Gear)
