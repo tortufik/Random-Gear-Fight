@@ -1,3 +1,4 @@
+-- note: not used anywhere in game anymore but still a good sample script
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
