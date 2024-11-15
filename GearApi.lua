@@ -196,7 +196,7 @@ function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, s
 	if RunService:IsServer() then
 		api.OnHitInternal:Fire(humanoid, deal, Parent)
 	else
-		ReplicatedStorage:WaitForChild("SetClientHealth"):FireServer(-1, Players.LocalPlayer.Character, humanoid.Health - deal, Parent)
+		ReplicatedStorage:WaitForChild("SetClientHealth"):FireServer(-1, humanoid.Parent, humanoid.Health - deal, Parent)
 		api.OnHitInternal:FireServer(humanoid, deal, Parent)
 	end
 	
@@ -207,19 +207,35 @@ end
 
 function api:GetNameFromId(Id)
 	assert(typeof(Id) == "number", "Argument 1 expected to be number got "..typeof(Id))
-	
-	for i,v in pairs(NameToId) do
-		if v == Id then
-			return i
+	if RunService:IsClient() then
+		for i,v in pairs(NameToId) do
+			if v == Id then
+				return i
+			end
+		end
+
+		return nil
+	else
+		for _,v in pairs(ServerStorage.Fixed:GetChildren()) do
+			local id = api:GetIdFromGearModel(v)
+			if id == Id then
+				return v.Name
+			end
 		end
 	end
-	
-	return nil
 end
 
 function api:GetIdFromName(Name)
 	assert(typeof(Name) == "string", "Argument 1 expected to be string got "..typeof(Name))
-	return NameToId[Name] or 0
+	if RunService:IsClient() then
+		return NameToId[Name] or 0
+	else
+		for _,v in pairs(ServerStorage.Fixed:GetChildren()) do
+			if v.Name == Name then
+				return api:GetIdFromGearModel(v)
+			end
+		end
+	end
 end
 
 function api:GetIdFromGearModel(Gear)
