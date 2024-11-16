@@ -228,9 +228,8 @@ function api:GetNameFromId(Id)
 end
 
 function api:GetIdFromName(Name)
-	assert(typeof(Name) == "string", "Argument 1 expected to be string got "..typeof(Name))
 	if RunService:IsClient() then
-		return NameToId[Name] or 0
+		return NameToId[Name] or Name
 	else
 		for _,v in pairs(ServerStorage.Fixed:GetChildren()) do
 			if v.Name == Name then
