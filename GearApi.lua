@@ -223,7 +223,6 @@ function api:GetNameFromId(Id)
 			if WaitFix < 2000 then
 				WaitFix += 1
 			else
-				print(1)
 				task.wait()
 				WaitFix = 0
 			end
