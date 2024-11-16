@@ -15,6 +15,7 @@ local api = {}
 local classes = {}
 local geartable = script.Parent.GearTable:GetChildren()
 local NameToId = require(script.NameToId)
+local WaitFix = 0
 
 if RunService:IsServer() then
 	api.OnKill = ServerScriptService.KOSHandler.OnKill.Event
@@ -73,20 +74,20 @@ function api:AwardPoints(Player, Points)
 	assert(typeof(Player) == "Instance", "Argument 1 expected to be instance got "..typeof(Player))
 	assert(typeof(Points) == "number", "Argument 2 expected to be number got "..typeof(Points))
 	assert(RunService:IsServer(), "AwardPoints can only be accessed on server")
-	
+
 	Player.leaderstats.Points.Value += Points
 	ReplicatedStorage.MakeSysNotification:FireClient(Player, {Title = "Points", Text = "You got awarded "..Points.." Points", Icon = api.PointsTexture})
 end
 
 function api:SetKiller(Player1 : Player, Player2 : Player) -- overwrite hit detection (probably dont use this)
 	assert(RunService:IsServer(), "SetKiller can only be accessed on server")
-	
+
 	Player1.Killer.Value = Player2
 end
 
 function api:GetKiller(Player)
 	assert(typeof(Player) == "Instance", "Argument 1 expected to be instance got "..typeof(Player))
-	
+
 	return Player.Killer.Value
 end
 
@@ -97,15 +98,15 @@ end
 
 function api:GetClassesFromId(Id)
 	assert(typeof(Id) == "number", "Argument 1 expected to be number got "..typeof(Id))
-	
+
 	local class = {}
-	
+
 	for i,c in pairs(classes) do
 		if table.find(c, Id) then
 			table.insert(class, i)
 		end
 	end
-	
+
 	return class
 end
 
@@ -147,18 +148,18 @@ end
 
 function api:GetDamageMultiplier(Player)
 	assert(typeof(Player) == "Instance", "Argument 1 expected to be instance got "..typeof(Player))
-	
+
 	if not Player:GetAttribute("DamageMultiplier") then
 		Player:SetAttribute("DamageMultiplier", 1)
 	end
-	
+
 	return Player:GetAttribute("DamageMultiplier")
 end
 
 function api:SetDamageMultiplier(Player, Multiplier)
 	assert(typeof(Player) == "Instance", "Argument 1 expected to be instance got "..typeof(Player))
 	assert(typeof(Multiplier) == "number", "Argument 2 expected to be number got "..typeof(Multiplier))
-	
+
 	Player:SetAttribute("DamageMultiplier", Multiplier)
 end
 
@@ -166,7 +167,7 @@ function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, s
 	assert(typeof(humanoid) == "Instance",  "Argument 1 expected to be instance got "..typeof(humanoid))
 	assert(typeof(deal) == "number", "Argument 2 expected to be number got "..typeof(deal))
 	assert(typeof(Parent) == "Instance", "Argument 3 expected to be instance got "..typeof(Parent))
-	
+
 	local gear = api:IsGear(Parent) :: Tool
 	local proj = api:IsProjectile(Parent) :: BasePart
 	local Hitter
@@ -199,7 +200,7 @@ function api:TakeDamage(humanoid : Humanoid, deal : number, Parent : Instance, s
 		ReplicatedStorage:WaitForChild("SetClientHealth"):FireServer(-1, humanoid.Parent, humanoid.Health - deal, Parent)
 		api.OnHitInternal:FireServer(humanoid, deal, Parent)
 	end
-	
+
 	if Hit and Hitter and Hitter ~= Hit and RunService:IsServer() then
 		api:SetKiller(Hit, Hitter)
 	end
@@ -219,11 +220,20 @@ function api:GetNameFromId(Id)
 		return nil
 	else
 		for _,v in pairs(ServerStorage.Fixed:GetChildren()) do
+			if WaitFix < 2000 then
+				WaitFix += 1
+			else
+				print(1)
+				task.wait()
+				WaitFix = 0
+			end
 			local id = api:GetIdFromGearModel(v)
 			if id == Id then
+				WaitFix = 0
 				return v.Name
 			end
 		end
+		WaitFix = 0
 	end
 end
 
@@ -232,17 +242,25 @@ function api:GetIdFromName(Name)
 		return NameToId[Name] or Name
 	else
 		for _,v in pairs(ServerStorage.Fixed:GetChildren()) do
+			if WaitFix < 2000 then
+				WaitFix += 1
+			else
+				task.wait()
+				WaitFix = 0
+			end
 			if v.Name == Name then
+				WaitFix = 0
 				return api:GetIdFromGearModel(v)
 			end
 		end
 	end
+	WaitFix = 0
 	return Name
 end
 
 function api:GetIdFromGearModel(Gear)
 	assert(typeof(Gear) == "Instance", "Argument 1 expected to be instance got "..typeof(Gear))
-	
+
 	if Gear:IsA("Tool") or Gear:IsA("HopperBin") then
 		if Gear:FindFirstChild("Id") and Gear:FindFirstChild("Id"):IsA("NumberValue") then
 			return Gear:FindFirstChild("Id").Value
@@ -252,27 +270,27 @@ function api:GetIdFromGearModel(Gear)
 			return Gear.Name
 		end
 	end
-	
+
 	return 0
 end
 
 function api:GetFixedGearFromId(Id)
 	assert(RunService:IsServer(), "GetFixedGearFromId can only be accessed on server")
-	
+
 	ServerStorage:WaitForChild("Fixed")
-	
+
 	for _,v in pairs(ServerStorage.Fixed:GetChildren()) do
 		if api:GetIdFromGearModel(v) == Id then
 			return v:Clone()
 		end
 	end
-	
+
 	for _,v in pairs(ServerStorage.Gears:GetChildren()) do
 		if api:GetIdFromGearModel(v) == Id then
 			return v:Clone()
 		end
 	end
-	
+
 	return nil
 end
 
