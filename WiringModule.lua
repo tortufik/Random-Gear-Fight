@@ -74,7 +74,7 @@ function module:GetSignal(SenderReciever)
 	return SenderReciever:GetCurrentValue()
 end
 
-function SignalToBool(Signal)
+function module:SignalToBool(Signal)
 	if Signal > 0.5 then
 		return true
 	else
@@ -82,7 +82,7 @@ function SignalToBool(Signal)
 	end
 end
 
-function BoolToSignal(Bool)
+function module:BoolToSignal(Bool)
 	if Bool then
 		return 1
 	else
