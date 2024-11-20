@@ -70,6 +70,10 @@ function module:SendSignal(Sender, SenderReciever, Power)
 	Sender:SetValue(Power)
 end
 
+function module:GetSignal(SenderReciever)
+	return SenderReciever:GetCurrentValue()
+end
+
 function SignalToBool(Signal)
 	if Signal > 0.5 then
 		return true
