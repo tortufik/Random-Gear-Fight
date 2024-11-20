@@ -64,9 +64,8 @@ function module:DisconnectSenderFromSenderReciever(SenderReciever)
 	SenderReciever.Source = nil
 end
 
-function module:SendSignal(Sender, SenderReciever, Power)
+function module:SendSignal(Sender, Power)
 	Power = math.min(0, math.max(Power, 1))
-	SenderReciever.Source = Sender
 	Sender:SetValue(Power)
 end
 
