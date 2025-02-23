@@ -297,4 +297,472 @@ function api:IsSandbox()
 	return game.PlaceId ~= 78594287058078
 end
 
+-- This function is used to enable damaging npcs using gears
+-- setfenv(1, require(GearApi):SetupEnv(getfenv(1))) to set up the environment
+
+function api:SetupEnv(customenv)
+	local function Instanceify(obj : Instance, tbl : table)
+		-- Properties
+
+		tbl["ClassName"] = obj.ClassName
+		tbl["Name"] = obj.Name
+		tbl["Archivable"] = obj.Name
+
+		-- Functions
+
+		function tbl:FindFirstChild(...)
+			return obj:FindFirstChild(...)
+		end
+
+		function tbl:WaitForChild(...)
+			return obj:WaitForChild(...)
+		end
+
+		function tbl:FindFirstChildOfClass(...)
+			return obj:FindFirstChildOfClass(...)
+		end
+
+		function tbl:GetChildren(...)
+			return obj:GetChildren(...)
+		end
+
+		function tbl:FindFirstChildWhichIsA(...)
+			return obj:FindFirstChildWhichIsA(...)
+		end
+
+		function tbl:Clone(...)
+			return obj:Clone(...)
+		end
+
+		function tbl:Destroy(...)
+			return obj:Destroy(...)
+		end
+
+		function tbl:GetDescendants(...)
+			return obj:GetDescendants(...)
+		end
+
+		function tbl:HasTag(...)
+			return obj:HasTag(...)
+		end
+
+		function tbl:GetAttribute(...)
+			return obj:GetAttribute(...)
+		end
+
+		function tbl:Remove(...)
+			return obj:Remove(...)
+		end
+
+		function tbl:FindFirstAncestorWhichIsA(...)
+			return obj:FindFirstAncestorWhichIsA(...)
+		end
+
+		function tbl:GetFullName(...)
+			return obj:GetFullName(...)
+		end
+
+		function tbl:SetAttribute(...)
+			return obj:SetAttribute(...)
+		end
+
+		function tbl:GetPropertyChangedSignal(...)
+			return obj:GetPropertyChangedSignal(...)
+		end
+
+		function tbl:AddTag(...)
+			return obj:AddTag(...)
+		end
+
+		function tbl:IsAncestorOf(...)
+			return obj:IsAncestorOf(...)
+		end
+
+		function tbl:GetTags(...)
+			return obj:GetTags(...)
+		end
+
+		function tbl:FindFirstAncestor(...)
+			return obj:FindFirstAncestor(...)
+		end
+
+		function tbl:ClearAllChildren(...)
+			return obj:ClearAllChildren(...)
+		end
+
+		function tbl:GetAttributeChangedSignal(...)
+			return obj:GetAttributeChangedSignal(...)
+		end
+
+		function tbl:FindFirstDescendant(...)
+			return obj:FindFirstDescendant(...)
+		end
+
+		function tbl:GetAttributes(...)
+			return obj:GetAttributes(...)
+		end
+
+		function tbl:IsPropertyModified(...)
+			return obj:IsPropertyModified(...)
+		end
+
+		function tbl:ResetPropertyToDefault(...)
+			return obj:ResetPropertyToDefault(...)
+		end
+
+		function tbl:GetActor(...)
+			return obj:GetActor(...)
+		end
+
+		function tbl:GetStyled(...)
+			return obj:GetStyled(...)
+		end
+
+		function tbl:RemoveTag(...)
+			return obj:RemoveTag(...)
+		end
+
+		function tbl:IsDescendantOf(...)
+			return obj:IsDescendantOf(...)
+		end
+
+		function tbl:FindFirstAncestorOfClass(...)
+			return obj:FindFirstAncestorOfClass(...)
+		end
+
+		-- Child events
+
+		obj.ChildAdded:Connect(function(child)
+			tbl[child.Name] = child
+		end)
+
+		obj.ChildRemoved:Connect(function(child)
+			tbl[child.Name] = nil
+		end)
+
+		obj.Changed:Connect(function(property)
+			tbl[property] = obj[property]
+		end)
+
+		-- Events
+
+		tbl.ChildAdded = obj.ChildAdded
+		tbl.ChildRemoved = obj.ChildRemoved
+		tbl.Changed = obj.Changed
+		tbl.DescendantAdded = obj.DescendantAdded
+		tbl.DescendantRemoving = obj.DescendantRemoving
+		tbl.AncestryChanged = obj.AncestryChanged
+		tbl.AttributeChanged = obj.AttributeChanged
+		tbl.Destroying = obj.Destroying
+		tbl.StyledPropertiesChanged = obj.StyledPropertiesChanged
+
+		for _,v in pairs(obj:GetChildren()) do
+			tbl[v.Name] = v
+		end
+
+		return tbl
+	end
+
+	local fakegame = {}
+
+	local Players = game:GetService("Players")
+
+	-- Properties
+	fakegame.CreatorId = game.CreatorId
+	fakegame.CreatorType = game.CreatorType
+	fakegame.GameId = game.GameId
+	fakegame.Genre = game.Genre
+	fakegame.JobId = game.JobId
+	fakegame.PlaceId = game.PlaceId
+	fakegame.PlaceVersion = game.PlaceVersion
+	fakegame.PrivateServerId = game.PrivateServerId
+	fakegame.PrivateServerOwnerId = game.PrivateServerOwnerId
+	fakegame.workspace = game.Workspace
+
+	-- Functions
+	function fakegame:BindToClose(...)
+		return game:BindToClose(...)
+	end
+
+	function fakegame:GetJobsInfo()
+		return game:GetJobsInfo()
+	end
+
+	function fakegame:GetObjects(...)
+		return game:GetObjects(...)
+	end
+
+	function fakegame:IsLoaded()
+		return game:IsLoaded()
+	end
+
+	function fakegame:SetPlaceId(...)
+		return game:SetPlaceId(...)
+	end
+
+	function fakegame:SetUniverseId(...)
+		return game:SetUniverseId(...)
+	end
+
+	function fakegame:FindService(...)
+		return game:FindService(...)
+	end
+
+	-- Events
+	fakegame.GraphicsQualityChangeRequest = game.GraphicsQualityChangeRequest
+	fakegame.Loaded = game.Loaded
+	fakegame.Close = game.Close
+	fakegame.ServiceAdded = game.ServiceAdded
+	fakegame.ServiceRemoving = game.ServiceRemoving
+
+	local fakeplayers = {}
+
+	Players.PlayerRemoving:Connect(function(v)
+		fakeplayers[v.Name] = nil
+	end)
+
+	Players.PlayerAdded:Connect(function(v)
+		fakeplayers[v.Name] = v
+	end)
+
+	for _, v in pairs(Players:GetPlayers()) do
+		fakeplayers[v.Name] = v
+	end
+
+	-- Properties
+	fakeplayers.BubbleChat = Players.BubbleChat
+	fakeplayers.CharacterAutoLoads = Players.CharacterAutoLoads
+	fakeplayers.ClassicChat = Players.ClassicChat
+	fakeplayers.LocalPlayer = Players.LocalPlayer
+	fakeplayers.MaxPlayers = Players.MaxPlayers
+	fakeplayers.PreferredPlayers = Players.PreferredPlayers
+	fakeplayers.RespawnTime = Players.RespawnTime
+	fakeplayers.ClassName = Players.ClassName
+	fakeplayers.Parent = fakegame
+
+	-- Events
+	fakeplayers.PlayerAdded = Players.PlayerAdded
+	fakeplayers.PlayerRemoving = Players.PlayerRemoving
+	fakeplayers.PlayerMembershipChanged = Players.PlayerMembershipChanged
+	fakeplayers.UserSubscriptionStatusChanged = Players.UserSubscriptionStatusChanged
+
+	-- Functions
+	function fakeplayers:Chat(message)
+		return Players:Chat(message)
+	end
+
+	function fakeplayers:GetPlayerByUserId(userId)
+		return Players:GetPlayerByUserId(userId)
+	end
+
+	function fakeplayers:GetPlayerFromCharacter(Character)
+		local Player = game:GetService("Players"):GetPlayerFromCharacter(Character)
+		if Player then
+			return Player
+		elseif Character and typeof(Character) == "Instance" and Character:IsA("Model") and Character:FindFirstChildWhichIsA("Humanoid") then
+			local FakePlayer = {}
+			FakePlayer = Instanceify(Players, FakePlayer)
+			FakePlayer.ClassName = "Player"
+			FakePlayer.Name = Character.Name
+			FakePlayer.UserId = -1
+			FakePlayer.AccountAge = 0
+			FakePlayer.Character = Character
+			FakePlayer.Backpack = Instance.new("Folder")
+			FakePlayer.PlayerGui = Instance.new("Folder")
+			FakePlayer.PlayerScripts = Instance.new("Folder")
+			FakePlayer.Team = nil
+			FakePlayer.TeamColor = BrickColor.new("White")
+			FakePlayer.MembershipType = Enum.MembershipType.None
+			FakePlayer.Neutral = true
+			FakePlayer.Parent = fakeplayers
+			FakePlayer.Attributes = {}
+			FakePlayer.Archivable = true
+			FakePlayer.CharacterAppearanceId = -1
+			FakePlayer.FollowUserId = 0
+			FakePlayer.CanLoadCharacterAppearance = false
+			FakePlayer.GameplayPaused = false
+			FakePlayer.DevComputerMovementMode = Enum.DevComputerMovementMode.UserChoice
+			FakePlayer.DevTouchMovementMode = Enum.DevTouchMovementMode.UserChoice
+			FakePlayer.CameraMaxZoomDistance = 400
+			FakePlayer.CameraMinZoomDistance = 0.5
+			FakePlayer.CameraMode = Enum.CameraMode.Classic
+			FakePlayer.DevCameraOcclusionMode = Enum.DevCameraOcclusionMode.Zoom
+			FakePlayer.DevComputerCameraMode = Enum.DevComputerCameraMovementMode.UserChoice
+			FakePlayer.DevEnableMouseLock = true
+			FakePlayer.DevTouchCameraMode = Enum.DevTouchCameraMovementMode.UserChoice
+			FakePlayer.HealthDisplayDistance = 100
+			FakePlayer.NameDisplayDistance = 100
+			FakePlayer.AutoJumpEnabled = true
+
+			-- Events
+			FakePlayer.Chatted = Instance.new("BindableEvent").Event
+			FakePlayer.CharacterAdded = Instance.new("BindableEvent").Event
+			FakePlayer.CharacterRemoving = Instance.new("BindableEvent").Event
+			FakePlayer.Idled = Instance.new("BindableEvent").Event
+			FakePlayer.OnTeleport = Instance.new("BindableEvent").Event
+
+			-- Functions
+
+			function FakePlayer:IsA(className)
+				return className == "Player"
+			end
+
+			function FakePlayer:IsDescendantOf(instance)
+				return instance == fakeplayers
+			end
+
+			function FakePlayer:IsAncestorOf(instance)
+				local currentInstance = self
+				while true do
+					if currentInstance == instance then
+						return true
+					end
+					currentInstance = currentInstance.Parent
+					if currentInstance == nil then
+						return false
+					end
+				end
+			end
+
+			function FakePlayer:LoadCharacter()
+				-- uhhhhh
+			end
+
+			function FakePlayer:Kick(reason)
+				warn("NPC " .. self.Name .. " was kicked. Reason: " .. (reason or "No reason provided."))
+				self.Character:Destroy()
+			end
+
+			function FakePlayer:SetAttribute(attribute, value)
+				if not self.Attributes then self.Attributes = {} end
+				self.Attributes[attribute] = value
+			end
+
+			function FakePlayer:GetAttribute(attribute)
+				return self.Attributes and self.Attributes[attribute] or nil
+			end
+
+			function FakePlayer:HasAppearanceLoaded()
+				return true
+			end
+
+			function FakePlayer:RequestStreamAroundAsync()
+				return true
+			end
+
+			function FakePlayer:GetNetworkPing()
+				return math.random(50, 150)
+			end
+
+			function FakePlayer:GetFriendsOnline()
+				return {} -- womp womp
+			end
+
+			function FakePlayer:CanLoadCharacterAppearance()
+				return false
+			end
+
+			function FakePlayer:SetSuperSafeChat(value)
+				self.SuperSafeChat = value
+			end
+
+			function FakePlayer:GetSuperSafeChat()
+				return self.SuperSafeChat or false
+			end
+
+			function FakePlayer:Move()
+			end
+
+			function FakePlayer:LoadData()
+				return {}
+			end
+
+			function FakePlayer:SaveData()
+				return true
+			end
+
+			function FakePlayer:GetChildren(...)
+				return {self.Backpack, self.PlayerGui, self.PlayerScripts}
+			end
+
+			return FakePlayer
+		end
+	end
+
+	function fakeplayers:GetPlayers()
+		return Players:GetPlayers()
+	end
+
+	function fakeplayers:SetChatStyle(...)
+		return Players:SetChatStyle(...)
+	end
+
+	function fakeplayers:TeamChat(...)
+		return Players:TeamChat(...)
+	end
+
+	function fakeplayers:BanAsync(...)
+		return Players:BanAsync(...)
+	end
+
+	function fakeplayers:CreateHumanoidModelFromDescription(...)
+		return Players:CreateHumanoidModelFromDescription(...)
+	end
+
+	function fakeplayers:CreateHumanoidModelFromUserId(...)
+		return Players:CreateHumanoidModelFromUserId(...)
+	end
+
+	function fakeplayers:GetBanHistoryAsync(...)
+		return Players:GetBanHistoryAsync(...)
+	end
+
+	function fakeplayers:GetCharacterAppearanceInfoAsync(...)
+		return Players:GetCharacterAppearanceInfoAsync(...)
+	end
+
+	function fakeplayers:GetFriendsAsync(...)
+		return Players:GetFriendsAsync(...)
+	end
+
+	function fakeplayers:GetHumanoidDescriptionFromOutfitId(...)
+		return Players:GetHumanoidDescriptionFromOutfitId(...)
+	end
+
+	function fakeplayers:GetHumanoidDescriptionFromUserId(...)
+		return Players:GetHumanoidDescriptionFromUserId(...)
+	end
+
+	function fakeplayers:GetNameFromUserIdAsync(...)
+		return Players:GetNameFromUserIdAsync(...)
+	end
+
+	function fakeplayers:GetUserIdFromNameAsync(...)
+		return Players:GetUserIdFromNameAsync(...)
+	end
+
+	function fakeplayers:GetUserThumbnailAsync(...)
+		return Players:GetUserThumbnailAsync(...)
+	end
+
+	function fakeplayers:UnbanAsync(...)
+		return Players:UnbanAsync(...)
+	end
+
+	fakeplayers = Instanceify(Players, fakeplayers)
+	fakegame = Instanceify(game, fakegame)
+
+	function fakegame:GetService(servicename)
+		if servicename ~= "Players" then
+			return game:GetService(servicename)
+		else
+			return fakeplayers
+		end
+	end
+
+	customenv["game"] = fakegame
+
+	return customenv
+end
+
 return api
