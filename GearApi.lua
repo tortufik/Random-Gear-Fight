@@ -13,6 +13,21 @@ end
 
 local api = {}
 local classes = {}
+local typeToValueType = {
+	["boolean"] = "BoolValue",
+	["string"] = "StringValue",
+	["BrickColor"] = "BrickColorValue",
+	["CFrame"] = "CFrameValue",
+	["Color3"] = "Color3Value",
+	["number"] = "NumberValue",
+	["Instance"] = "ObjectValue",
+	["Ray"] = "RayValue",
+	["Vector3"] = "Vector3Value",
+	["RBXScriptConnection"] = "ObjectValue",
+}
+
+local getfenv, setfenv = getfenv, setfenv -- to avoid pointless warnings
+
 local geartable = script.Parent.GearTable:GetChildren()
 local NameToId = require(script.NameToId)
 local WaitFix = 0
@@ -297,10 +312,9 @@ function api:IsSandbox()
 	return game.PlaceId ~= 78594287058078
 end
 
--- This function is used to enable damaging npcs using gears
--- setfenv(1, require(GearApi):SetupEnv(getfenv(1))) to set up the environment
-
-function api:SetupEnv(customenv)
+-- Function for handling npcs only call at the start of the script
+function api:SetupEnv()
+	local customenv = getfenv(2)
 	local function Instanceify(obj : Instance, tbl : table)
 		-- Properties
 
@@ -684,7 +698,7 @@ function api:SetupEnv(customenv)
 			function FakePlayer:GetChildren(...)
 				return {self.Backpack, self.PlayerGui, self.PlayerScripts}
 			end
-
+			
 			return FakePlayer
 		end
 	end
@@ -761,8 +775,130 @@ function api:SetupEnv(customenv)
 	end
 
 	customenv["game"] = fakegame
+	
+	setfenv(2, customenv)
+	
+	local function GetDescendants(tbl)
+		local descendants = {}
 
-	return customenv
+		local function recurse(subTable)
+			for key, value in pairs(subTable) do
+				table.insert(descendants, value)
+				if type(value) == "table" then
+					recurse(value)
+				end
+			end
+		end
+
+		recurse(tbl)
+		return descendants
+	end
+
+	local function HandleFn(v)
+		local fnName, fn = debug.info(v, "nf")
+		if string.find(string.lower(fnName), "tag") then
+			--print("found "..fnName)
+			local env = getfenv(3)
+			
+			env[fnName] = function(...)
+				local tbl = {...}
+
+				for i,v in pairs(tbl) do
+					if typeof(v) == "table" then
+						tbl[i] = nil
+					end
+				end
+
+				return fn(unpack(tbl))
+			end
+			
+			setfenv(3, env)
+		end
+	end
+
+	local env = getfenv(2)
+	--local scr = env.script
+	
+	env["require"] = function(v1)
+		if v1 ~= script then
+			require(v1)
+		else
+			local customapi = api
+			function customapi:SetupEnv()
+				-- do not run it again
+			end
+			
+			return customapi
+		end
+	end
+
+	setfenv(2, env)
+	
+	local co = coroutine.create(debug.info(2, "f"))
+
+	--if api:IsSandbox() then
+	--	while task.wait() do
+	--		for i,v in pairs(getfenv(2)) do
+	--			if not scr:FindFirstChild(i) then
+	--				if typeof(v) == "function" then
+	--					local bind = Instance.new("BindableFunction")
+	--					bind.OnInvoke = v
+	--					bind.Name = i
+	--					bind.Parent = scr
+	--					local line, pc, a, source = debug.info(v, "las")
+	--					local n = Instance.new("StringValue")
+	--					n.Value = line
+	--					n.Name = "Line"
+	--					n.Parent = bind
+	--					local n2 = Instance.new("StringValue")
+	--					n2.Value = tostring(pc)
+	--					n2.Name = "Parameters"
+	--					n2.Parent = bind
+	--					local n3 = Instance.new("StringValue")
+	--					n3.Value = tostring(a)
+	--					n3.Name = "Arity"
+	--					n3.Parent = bind
+	--					local n4 = Instance.new("StringValue")
+	--					n4.Value = tostring(source)
+	--					n4.Name = "ScriptSource"
+	--					n4.Parent = bind
+	--					HandleFn(v)
+	--					continue
+	--				elseif typeof(v) == "table" then
+	--					continue
+	--				elseif typeof(v) == "RBXScriptConnection" then
+	--					local n = Instance.new("StringValue")
+	--					n.Value = tostring(v)
+	--					n.Name = i
+	--					n.Parent = scr
+	--					continue
+	--				end
+	--				local value = v
+	--				local name = tostring(i)
+	--				local n = Instance.new(typeToValueType[typeof(v)] or "StringValue")
+	--				n.Name = name
+	--				n.Value = value
+	--				n.Parent = scr
+	--			else
+	--				if typeof(v) ~= "function" and typeof(v) ~= "table" and typeof(v) ~= "RBXScriptConnection" then
+	--					scr:FindFirstChild(i).Value = v
+	--				end
+	--			end
+	--		end
+	--	end
+	--else
+		coroutine.resume(co)
+		while task.wait() and coroutine.status(co) ~= "suspended" do
+			for _,v in pairs(getfenv(2)) do
+				if typeof(v) == "function" then
+					HandleFn(v)
+				end
+			end
+		end
+	--end
+	
+	repeat task.wait()
+	until false
 end
 
 return api
