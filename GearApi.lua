@@ -489,8 +489,10 @@ function api:SetupEnv()
 	fakegame.JobId = game.JobId
 	fakegame.PlaceId = game.PlaceId
 	fakegame.PlaceVersion = game.PlaceVersion
-	fakegame.PrivateServerId = game.PrivateServerId
-	fakegame.PrivateServerOwnerId = game.PrivateServerOwnerId
+	if RunService:IsServer() then
+		fakegame.PrivateServerId = game.PrivateServerId
+		fakegame.PrivateServerOwnerId = game.PrivateServerOwnerId
+	end
 	fakegame.workspace = game.Workspace
 
 	-- Functions
@@ -698,7 +700,7 @@ function api:SetupEnv()
 			function FakePlayer:GetChildren(...)
 				return {self.Backpack, self.PlayerGui, self.PlayerScripts}
 			end
-			
+
 			return FakePlayer
 		end
 	end
@@ -773,11 +775,13 @@ function api:SetupEnv()
 			return fakeplayers
 		end
 	end
+	
+	local co = debug.info(2, "f") 
 
 	customenv["game"] = fakegame
-	
-	setfenv(2, customenv)
-	
+
+	setfenv(co, customenv)
+
 	local function GetDescendants(tbl)
 		local descendants = {}
 
@@ -793,13 +797,13 @@ function api:SetupEnv()
 		recurse(tbl)
 		return descendants
 	end
-
+	
 	local function HandleFn(v)
 		local fnName, fn = debug.info(v, "nf")
 		if string.find(string.lower(fnName), "tag") then
 			--print("found "..fnName)
 			local env = getfenv(3)
-			
+
 			env[fnName] = function(...)
 				local tbl = {...}
 
@@ -811,94 +815,136 @@ function api:SetupEnv()
 
 				return fn(unpack(tbl))
 			end
-			
-			setfenv(3, env)
+
+			setfenv(co, env)
 		end
 	end
 
-	local env = getfenv(2)
-	--local scr = env.script
-	
+	local env = getfenv(co)
+	local scr = env.script
+
 	env["require"] = function(v1)
 		if v1 ~= script then
-			require(v1)
+			return require(v1)
 		else
 			local customapi = api
 			function customapi:SetupEnv()
 				-- do not run it again
 			end
-			
+
 			return customapi
 		end
 	end
 
-	setfenv(2, env)
-	
-	local co = coroutine.create(debug.info(2, "f"))
+	setfenv(co, env)
 
-	--if api:IsSandbox() then
-	--	while task.wait() do
-	--		for i,v in pairs(getfenv(2)) do
-	--			if not scr:FindFirstChild(i) then
-	--				if typeof(v) == "function" then
-	--					local bind = Instance.new("BindableFunction")
-	--					bind.OnInvoke = v
-	--					bind.Name = i
-	--					bind.Parent = scr
-	--					local line, pc, a, source = debug.info(v, "las")
-	--					local n = Instance.new("StringValue")
-	--					n.Value = line
-	--					n.Name = "Line"
-	--					n.Parent = bind
-	--					local n2 = Instance.new("StringValue")
-	--					n2.Value = tostring(pc)
-	--					n2.Name = "Parameters"
-	--					n2.Parent = bind
-	--					local n3 = Instance.new("StringValue")
-	--					n3.Value = tostring(a)
-	--					n3.Name = "Arity"
-	--					n3.Parent = bind
-	--					local n4 = Instance.new("StringValue")
-	--					n4.Value = tostring(source)
-	--					n4.Name = "ScriptSource"
-	--					n4.Parent = bind
-	--					HandleFn(v)
-	--					continue
-	--				elseif typeof(v) == "table" then
-	--					continue
-	--				elseif typeof(v) == "RBXScriptConnection" then
-	--					local n = Instance.new("StringValue")
-	--					n.Value = tostring(v)
-	--					n.Name = i
-	--					n.Parent = scr
-	--					continue
-	--				end
-	--				local value = v
-	--				local name = tostring(i)
-	--				local n = Instance.new(typeToValueType[typeof(v)] or "StringValue")
-	--				n.Name = name
-	--				n.Value = value
-	--				n.Parent = scr
-	--			else
-	--				if typeof(v) ~= "function" and typeof(v) ~= "table" and typeof(v) ~= "RBXScriptConnection" then
-	--					scr:FindFirstChild(i).Value = v
-	--				end
-	--			end
-	--		end
-	--	end
-	--else
-		coroutine.resume(co)
-		while task.wait() and coroutine.status(co) ~= "suspended" do
-			for _,v in pairs(getfenv(2)) do
+	--coroutine.resume(co)
+	Change = {}
+	local Folder = Instance.new("Folder")
+	Folder.Name = "_GLOBALS"
+	Folder.Parent = scr
+	local Functions = Instance.new("Folder")
+	Functions.Name = "_FUNCTIONS"
+	Functions.Parent = scr
+	local bind = Instance.new("BindableFunction")
+	bind.Name = "SetGlobal"
+	bind.Parent = Functions
+	bind.OnInvoke = function(key, value, folder)
+		Change[key] = {[1] = folder, [2] = value}
+	end
+
+	local function TrackGlobals(env, Folder, traceback)
+		for i,v in pairs(env) do
+			if not Folder:FindFirstChild(i) then
 				if typeof(v) == "function" then
+					local bind = Instance.new("BindableFunction")
+					bind.OnInvoke = v
+					bind.Name = i
+					bind.Parent = Folder
+					local line, pc, a, source = debug.info(v, "las")
+					local n = Instance.new("StringValue")
+					n.Value = line
+					n.Name = "Line"
+					n.Parent = bind
+					local n2 = Instance.new("StringValue")
+					n2.Value = tostring(pc)
+					n2.Name = "Parameters"
+					n2.Parent = bind
+					local n3 = Instance.new("StringValue")
+					n3.Value = tostring(a)
+					n3.Name = "Arity"
+					n3.Parent = bind
+					local n4 = Instance.new("StringValue")
+					n4.Value = tostring(source)
+					n4.Name = "ScriptSource"
+					n4.Parent = bind
 					HandleFn(v)
+					continue
+				elseif typeof(v) == "table" then
+					local TableFolder = Instance.new("Folder")
+					TableFolder.Name = i
+					TableFolder.Parent = Folder
+					traceback[#traceback + 1] = i
+					TrackGlobals(v, TableFolder, traceback)
+					continue
+				elseif typeof(v) == "RBXScriptConnection" then
+					local n = Instance.new("StringValue")
+					n.Value = tostring(v)
+					n.Name = i
+					n.Parent = Folder
+					continue
+				elseif typeof(v) == "RBXScriptSignal" then
+					local n = Instance.new("StringValue")
+					n.Value = tostring(v)
+					n.Name = i
+					n.Parent = Folder
+					continue
+				elseif typeof(v) == "EnumItem" then
+					local value = v
+					local name = tostring(i)
+					local n = Instance.new(typeToValueType[typeof(v)] or "StringValue")
+					n.Name = name
+					n.Value = value.Name
+					n.Parent = Folder
+					continue
+				end
+				local value = v
+				local name = tostring(i)
+				local n = Instance.new(typeToValueType[typeof(v)] or "StringValue")
+				n.Name = name
+				n.Value = value
+				n.Parent = Folder
+			else
+				if typeof(v) ~= "function" and typeof(v) ~= "table" and typeof(v) ~= "RBXScriptConnection" then
+					if Change[i] and Change[i][1] == Folder then
+						if #traceback > 0 then
+							local tbl = env
+
+							for _,v in pairs(traceback) do
+								tbl = tbl[v]
+							end
+
+							tbl[i] = Change[i][2]
+							setfenv(co, env)
+						else
+							env[i] = Change[i][2]
+							setfenv(co, env)
+						end
+
+						Change[i] = nil
+					else
+						Folder:FindFirstChild(i).Value = v
+					end
 				end
 			end
 		end
-	--end
-	
-	repeat task.wait()
-	until false
+	end
+
+	task.spawn(function()
+		while task.wait() do
+			TrackGlobals(getfenv(co), Folder, {})
+		end
+	end)
 end
 
 return api
